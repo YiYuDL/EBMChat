@@ -1,17 +1,17 @@
-# ChatMolData
+# EBMChat
 
-Implementation of the Paper "[ChatMolData: a Multimodal Agent for Automatic Molecular Data Processing](https://chemrxiv.org/engage/chemrxiv/article-details/67320b507be152b1d0bcf7f3)" (upload chemrxiv) by Yi Yu et al.. We assumed that the ChatMolData will bridge the gap between chemical experimenters and algorithm developers. 
+Implementation of the Paper "[Augmenting Large Language Models and Retrieval-Augmented Generation with an Evidence-Based Medicine-Enabled Agent System](https://www.medrxiv.org/content/10.1101/2025.10.17.25338266v1)" (upload MedRxiv) by Yi Yu et al.. EBMChat is a novel LLM-based agent that integrates Evidence-Based Medicine principles and contextual conversation capabilities in answering clinical questions. 
 
-<img src="example/TOC.png" width="100%" height="100%">
+<img src="example/graph.png" width="100%" height="100%">
 
 ## Install via Anaconda
-Create a new envioronment:
+Create a new environment:
 ```bash
-cd chatmoldata
+cd ebmchat
 conda env create -f environment.yml
-conda activate chatmoldata
+conda activate ebmchat
 ```
-Install the chatmoldata package
+Install the ebmchat package
 ```bash
 python setup.py install
 ```
