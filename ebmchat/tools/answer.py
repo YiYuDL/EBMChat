@@ -23,7 +23,7 @@ from pathlib import Path
 from typing import Union
 from utils.download import get_pdf_link_by_pmid,download_by_link
 from utils.pmid2citation import pmid2citation
-from utils.answer import RAG
+from utils.answer_rag import RAG
 # import os
 
 # 假设以下两个函数已在你的项目中实现/可导入：
