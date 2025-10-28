@@ -24,10 +24,9 @@ export OPENAI_API_KEY=your-openai-api-key
 
 In a Python:
 ```python
-from chatmoldata.agents import ChatMolData
-
-CMD = ChatMolData(model="gpt-4", temp=0.1)
-CMD.run('''For ./data/mol_smiles.csv, calculate the multiple proper-tiesofthe molecules and the plot histogram showing distribution ofdifferent properties, properties inelude MW, ALogP, tPSA and QED.''') 
+from ebmchat.app import EBMChat
+'''initial question'''
+EBMChat("What are treatments for advanced hepatocellular carcinoma", "thread_003")
 ```
 The output is:
 ```bash
