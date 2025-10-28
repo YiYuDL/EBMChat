@@ -50,22 +50,11 @@ Summary: Advanced HCC treatment includes first-line multikinase inhibitors (sora
 
 Citation: Systemic Therapy for Advanced Hepatocellular Carcinoma: ASCO Guideline Update. Guideline, J Clin Oncol, 2024, https://doi.org/10.1200/JCO.23.02745, 38502889.
 ```
+
 ```python
 from ebmchat.app import EBMChat
 '''2nd question'''
-EBMChat("please show me the initial query and optimized query from the last question", "thread_003")
-```
-2nd output is:
-```bash
-2nd Answer: The multiple properties of the molecules in the provided CSV file have been calculated and histograms showing the distributions of these properties have been plotted. The final CSV file with the calculated properties is 'mol smiles cleanedpred.csv`
-```
-```python
-from ebmchat.app import EBMChat
-'''3rd question'''
 EBMChat("please show me the Guideline information from the generated table file", "thread_003")
 ```
-3rd output is:
-```bash
-3rd Answer: The multiple properties of the molecules in the provided CSV file have been calculated and histograms showing the distributions of these properties have been plotted. The final CSV file with the calculated properties is 'mol smiles cleanedpred.csv`
-```
-<img src="example/output3.png" width="40%" height="40%">
+2nd output is:
+<img src="example/table.png" width="40%" height="40%">
