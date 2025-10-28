@@ -28,8 +28,25 @@ from ebmchat.app import EBMChat
 '''initial question'''
 EBMChat("What are treatments for advanced hepatocellular carcinoma", "thread_003")
 ```
-The output is:
+1st output is:
 ```bash
-Final Answer: The multiple properties of the molecules in the provided CSV file have been calculated and histograms showing the distributions of these properties have been plotted. The final CSV file with the calculated properties is 'mol smiles cleanedpred.csv`
+Initial Answer: The multiple properties of the molecules in the provided CSV file have been calculated and histograms showing the distributions of these properties have been plotted. The final CSV file with the calculated properties is 'mol smiles cleanedpred.csv`
+```
+```python
+from ebmchat.app import EBMChat
+'''2nd question'''
+EBMChat("please show me the initial query and optimized query from the last question", "thread_003")
+```
+2nd output is:
+```bash
+2nd Answer: The multiple properties of the molecules in the provided CSV file have been calculated and histograms showing the distributions of these properties have been plotted. The final CSV file with the calculated properties is 'mol smiles cleanedpred.csv`
+```
+```python
+from ebmchat.app import EBMChat
+'''3rd question'''
+EBMChat("please show me the Guideline information from the generated table file", "thread_003")
+```
+```bash
+3rd Answer: The multiple properties of the molecules in the provided CSV file have been calculated and histograms showing the distributions of these properties have been plotted. The final CSV file with the calculated properties is 'mol smiles cleanedpred.csv`
 ```
 <img src="example/output3.png" width="40%" height="40%">
