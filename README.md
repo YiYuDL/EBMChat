@@ -30,7 +30,26 @@ EBMChat("What are treatments for advanced hepatocellular carcinoma", "thread_003
 ```
 1st output is:
 ```bash
-Initial Answer: The multiple properties of the molecules in the provided CSV file have been calculated and histograms showing the distributions of these properties have been plotted. The final CSV file with the calculated properties is 'mol smiles cleanedpred.csv`
+Initial Answer:
+1. First-Line Systemic Therapy - The mainstay for advanced hepatocellular carcinoma (HCC) includes multikinase inhibitors such as sorafenib and lenvatinib, both shown to improve overall survival in unresectable cases (Section: Systemic Therapy for Advanced HCC).
+   1.1. Sorafenib - Standard first-line agent; benefits include modest survival improvement and manageable toxicity.
+   1.2. Lenvatinib - Non-inferior to sorafenib; offers higher response rates but similar survival outcomes.
+
+2. Immunotherapy - Immune checkpoint inhibitors, particularly atezolizumab combined with bevacizumab, have demonstrated superior survival and response rates compared to sorafenib (Section: Immunotherapy in HCC).
+   2.1. Atezolizumab + Bevacizumab - Preferred first-line option for eligible patients due to improved efficacy.
+   2.2. Nivolumab and Pembrolizumab - Used as second-line agents after sorafenib failure; response rates are modest.
+
+3. Second-Line Targeted Therapy - For patients progressing on first-line therapy, options include regorafenib, cabozantinib, and ramucirumab (Section: Second-Line Systemic Therapy).
+   3.1. Regorafenib - Approved for patients who tolerated sorafenib; improves survival.
+   3.2. Cabozantinib - Effective for patients previously treated with sorafenib.
+   3.3. Ramucirumab - Specifically for patients with elevated AFP (≥400 ng/mL).
+
+4. Patient Selection and Disease Factors - Treatment choice depends on liver function (Child-Pugh score), performance status, and comorbidities; not all patients are eligible for immunotherapy or targeted agents (Section: Patient Selection and Treatment Considerations).
+
+Summary:  
+Advanced HCC treatment includes first-line multikinase inhibitors (sorafenib, lenvatinib), immunotherapy (atezolizumab + bevacizumab), and second-line agents (regorafenib, cabozantinib, ramucirumab), with therapy tailored to liver function and patient status.
+
+Citation: Systemic Therapy for Advanced Hepatocellular Carcinoma: ASCO Guideline Update. Guideline, J Clin Oncol, 2024, https://doi.org/10.1200/JCO.23.02745, 38502889.
 ```
 ```python
 from ebmchat.app import EBMChat
