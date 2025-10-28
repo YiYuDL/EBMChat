@@ -46,6 +46,7 @@ from ebmchat.app import EBMChat
 '''3rd question'''
 EBMChat("please show me the Guideline information from the generated table file", "thread_003")
 ```
+3rd output is:
 ```bash
 3rd Answer: The multiple properties of the molecules in the provided CSV file have been calculated and histograms showing the distributions of these properties have been plotted. The final CSV file with the calculated properties is 'mol smiles cleanedpred.csv`
 ```
