@@ -57,4 +57,4 @@ from ebmchat.app import EBMChat
 EBMChat("please show me the Guideline information from the generated table file", "thread_003")
 ```
 2nd output is:
-<img src="example/table.png" width="20%" height="20%">
+<img src="example/table.png" width="80%" height="80%">
