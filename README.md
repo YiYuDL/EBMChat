@@ -46,8 +46,7 @@ Initial Answer:
 
 4. Patient Selection and Disease Factors - Treatment choice depends on liver function (Child-Pugh score), performance status, and comorbidities; not all patients are eligible for immunotherapy or targeted agents (Section: Patient Selection and Treatment Considerations).
 
-Summary:  
-Advanced HCC treatment includes first-line multikinase inhibitors (sorafenib, lenvatinib), immunotherapy (atezolizumab + bevacizumab), and second-line agents (regorafenib, cabozantinib, ramucirumab), with therapy tailored to liver function and patient status.
+Summary: Advanced HCC treatment includes first-line multikinase inhibitors (sorafenib, lenvatinib), immunotherapy (atezolizumab + bevacizumab), and second-line agents (regorafenib, cabozantinib, ramucirumab), with therapy tailored to liver function and patient status.
 
 Citation: Systemic Therapy for Advanced Hepatocellular Carcinoma: ASCO Guideline Update. Guideline, J Clin Oncol, 2024, https://doi.org/10.1200/JCO.23.02745, 38502889.
 ```
