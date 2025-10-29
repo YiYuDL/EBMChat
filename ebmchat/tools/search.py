@@ -48,7 +48,10 @@ def assign_pub_type(list1):
         return 'others'
 
 def pm_search(query):
-    Entrez.email = 'qmming@gmail.com'
+
+    '''input your own email address'''
+    Entrez.email = 'yourownemial@gmail.com'
+    
     handle = Entrez.esearch(db="pubmed", term=query,retmax = 10000)
     record = Entrez.read(handle)
     handle.close()
