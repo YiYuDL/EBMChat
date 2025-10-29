@@ -18,7 +18,10 @@ import signal
 
 def pmid2doi(pmid):
     pmid = int(pmid)
-    email_for_unpaywall="yuyi689@gmail.com"
+    
+    '''input your own email address'''
+    Entrez.email = 'yourownemial@gmail.com'
+    
     handle = Entrez.esearch(db="pubmed", term=pmid,retmax = 1)
     record = Entrez.read(handle)
     handle.close()
