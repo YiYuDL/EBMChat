@@ -73,7 +73,10 @@ mesh
 def Mesh(input_string):
     try:
         input_string = input_string.strip('"')
-        Entrez.email = 'qmming@gmail.com'
+        
+        '''input your own email address'''
+        Entrez.email = 'yourownemial@gmail.com'
+       
         handle = Entrez.esearch(db="mesh", term=input_string)
         record = Entrez.read(handle)
         if len(record['TranslationSet']) == 1:
