@@ -48,7 +48,10 @@ def assign_pub_type(list1):
 def pmid2citation(pmid):
     
     pmid = str(pmid)
-    Entrez.email = 'qmming@gmail.com'
+
+    '''input your own email address'''
+    Entrez.email = 'yourownemial@gmail.com'
+    
     file = 'citation.csv'
     SOURCE_DIR = Path("/home/user/source").mkdir(parents=True, exist_ok=True) or Path("/home/user/source")
     pdf_path = SOURCE_DIR / file
