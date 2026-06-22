@@ -1,4 +1,4 @@
-name: shi_graph_A5
+name: ebmchat_env
 channels:
   - defaults
 dependencies:
