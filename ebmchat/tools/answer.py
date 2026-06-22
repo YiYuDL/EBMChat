@@ -45,7 +45,6 @@ def answer_gen(pmid: str, question: str) -> str:
     if pdf_path.exists():
         output = RAG(pmid, question)
 
-        print('ben di you')
         print('\n')
         output = output + '\n\n' + 'Citation: ' + citation
         print(output)
