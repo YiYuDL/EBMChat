@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Created on Sun Sep 28 17:26:39 2025
 
@@ -12,18 +10,18 @@ from typing import Dict, Any, List, Optional
 from typing_extensions import TypedDict
 from langchain.tools import StructuredTool
 
-#shi
+
 import sys
 import os
 from pathlib import Path
 
-# 获取项目根目录（当前文件的父目录的父目录）
+
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
-# 添加到系统路径
+
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
-#shi
+
 
 from tools.evidence import evid_eval
 from tools.query import query_opt
@@ -49,8 +47,8 @@ def _ans_wrapper(pmid: str, question: str) -> str:
     return str(answer_gen(pmid, question))
 
 def _show_wrapper(keyword: str, file_type: str) -> str:
-    # 这里保持你工具的签名：keyword(str), file_type(str)
-    # 你在场景里会把 memory['searched_result'] 替换到 file_type 里
+
+
     return str(result_show(keyword, file_type))
 
 Question2Query = StructuredTool.from_function(
