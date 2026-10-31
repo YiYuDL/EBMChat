@@ -10,7 +10,9 @@ import pandas as pd
 def result_show(pub_type: str, file_path: str) -> pd.DataFrame:
     """
     Filter records in a CSV file by evidence type and shorten long titles for display.
-
+    
+    This tool also goes by another name: Table_Gen.
+    
     Args:
         pub_type (str): Evidence type to filter by.
         file_path (str): Path to the CSV file.
