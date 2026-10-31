@@ -5,15 +5,27 @@ Implementation of the Paper "[Augmenting Large Language Models and Retrieval-Aug
 <img src="example/graph.png" width="100%" height="100%">
 
 ## Install via Anaconda
-Create a new environment:
+Clone the repository and create the environment:
 ```bash
-cd ebmchat
+git clone https://github.com/YiYuDL/EBMChat.git
+cd EBMChat
 conda env create -f environment.yml
 conda activate ebmchat_env
 ```
-Install the ebmchat package
+
+Install EBMChat in editable mode. The environment file already installs the
+runtime dependencies, including the GPU build of FAISS, so dependency
+resolution is disabled for this step:
+
 ```bash
-python setup.py install
+python -m pip install --no-deps -e .
+```
+
+Alternatively, a standard Python environment can install EBMChat and its CPU
+dependencies directly:
+
+```bash
+python -m pip install .
 ```
 
 ## Getting start
