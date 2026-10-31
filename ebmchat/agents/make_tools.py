@@ -28,6 +28,7 @@ from tools.evidence import evid_eval
 from tools.query import query_opt
 from tools.query import generate_query
 from tools.search import pm_search
+from tools.cochrane import coc_search
 from tools.answer import answer_gen
 from tools.chat import result_show
 from tools.reference import ref_search
@@ -41,6 +42,9 @@ def _qopt_wrapper(query: str) -> str:
 
 def _pm_wrapper(query: str) -> str:
     return str(pm_search(query))
+
+def _coc_wrapper(query: str, max_results: int = 100) -> str:
+    return str(coc_search(query, max_results))
 
 def _evid_wrapper(search_results: str, question: str) -> str:
     return str(evid_eval(search_results, question))
@@ -72,6 +76,16 @@ PM_Search = StructuredTool.from_function(
     func=_pm_wrapper,
     name="PM_Search",
     description="Step 3/5. Input: query(str). Output: search_results(str)."
+)
+Coc_Search = StructuredTool.from_function(
+    func=_coc_wrapper,
+    name="Coc_Search",
+    description=(
+        "Search the Cochrane Database of Systematic Reviews when the user "
+        "explicitly requests Cochrane evidence. Input: query(str), "
+        "max_results(int, optional, default 100). Output: path to a ranked "
+        "CSV table with Cochrane review metadata and evidence classification."
+    ),
 )
 Evid_Eval = StructuredTool.from_function(
     func=_evid_wrapper,

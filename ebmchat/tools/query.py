@@ -10,8 +10,6 @@ from utils.model_runtime import (
     create_openai_client,
 )
 
-client = create_openai_client()
-
 def generate_query(question: str) -> str:
     prompt = f"""You are an expert in evidence-based medicine, skilled at using evidence-based medicine thinking to convert clinical questions described in natural language into search queries based on the PICO principle (patient, intervention, condition, and outcome). After conversion, please place patient- or disease-related keywords first, each keyword needs to be enclosed in quotation marks.. Below are a few representative examples; please follow these examples for conversion：
 1. question: What are recommended treatments for advanced non-small cell lung cancer. query: "non-small cell lung cancer " AND "advanced" AND "treatments";
@@ -24,6 +22,7 @@ def generate_query(question: str) -> str:
 
 Please follow the instructions and examples above and only output the final converted search query, without any additional explanations or additional content. Here the question is {question}
 """
+    client = create_openai_client()
     response = client.chat.completions.create(
         model=LLM_MODEL,
         messages=[{"role": "user", "content": prompt}],
@@ -165,3 +164,45 @@ def query_opt(string):
 
 
     return query
+
+
+def cochrane_query(query: str) -> str:
+    """Convert a generated/PubMed query into a Cochrane-compatible query.
+
+    ``Query_Opt`` adds PubMed field tags and a PubMed date expression.  Those
+    fragments are not valid in Cochrane searches, so Coc_Search removes them
+    while preserving the quoted terms and Boolean structure.  Plain PICO
+    queries produced by ``Question2Query`` pass through unchanged.
+    """
+
+    converted = str(query or "").strip()
+    if not converted:
+        raise ValueError("query must not be empty.")
+
+    # PubMed field qualifiers, including the variants emitted by query_opt.
+    converted = re.sub(
+        r"\[(?:mesh(?: terms)?|tiab|title|abstract|tw|all fields)\]",
+        "",
+        converted,
+        flags=re.IGNORECASE,
+    )
+    # PubMed publication-date ranges such as ``2022:3000[dp]``.  Remove an
+    # adjacent Boolean operator as well so the remaining expression is valid.
+    converted = re.sub(
+        r"\s+(?:AND|OR)\s+\d{4}\s*:\s*\d{4}\s*\[dp\]",
+        "",
+        converted,
+        flags=re.IGNORECASE,
+    )
+    converted = re.sub(
+        r"\b\d{4}\s*:\s*\d{4}\s*\[dp\]",
+        "",
+        converted,
+        flags=re.IGNORECASE,
+    )
+    converted = re.sub(r"\s+", " ", converted).strip()
+    converted = re.sub(r"^(?:AND|OR)\s+|\s+(?:AND|OR)$", "", converted, flags=re.I)
+
+    if not converted:
+        raise ValueError("query did not contain searchable Cochrane terms.")
+    return converted

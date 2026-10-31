@@ -17,6 +17,7 @@ from langgraph.graph import StateGraph, START, END
 from langgraph.checkpoint.memory import MemorySaver
 from agents.make_tools import (
     Answer_Gen,
+    Coc_Search,
     Evid_Eval,
     PM_Search,
     Query_Opt,
@@ -31,6 +32,7 @@ TOOLS = {
     "Question2Query": Question2Query,
     "Query_Opt": Query_Opt,
     "PM_Search": PM_Search,
+    "Coc_Search": Coc_Search,
     "Evid_Eval": Evid_Eval,
     "Answer_Gen": Answer_Gen,
     "Result_Show": Result_Show,
@@ -42,6 +44,7 @@ TOOL_OUTPUT_TO_MEMORY_KEY = {
     "Question2Query": "initial_query",
     "Query_Opt": "optimized_query",
     "PM_Search": "searched_result",
+    "Coc_Search": "cochrane_results",
     "Evid_Eval": "pmid",
     "Answer_Gen": "final_answer",
     "Result_Show": "shown_results",
@@ -64,7 +67,7 @@ class AgentState(TypedDict, total=False):
 llm = create_chat_model()
 
 
-REACT_SYSTEM_PROMPT = """You are an assistant with tools. For a new thread, the system will already run the 5-step pipeline automatically. For subsequent turns in the same thread, decide which tool(s) to call based on the user's request and the conversation memory.
+REACT_SYSTEM_PROMPT = """You are an assistant with tools. New threads normally run the 5-step pipeline automatically; an explicit Cochrane request is routed directly to tool selection. For subsequent turns in the same thread, decide which tool(s) to call based on the user's request and the conversation memory.
 
 Available tools:
 1) Question2Query(question:str) -> initial_query:str
@@ -74,6 +77,7 @@ Available tools:
 5) Answer_Gen(pmid:str, question:str) -> final_answer:str
 6) Result_Show(keyword:str, file_type:str) -> shown_results:str
 7) Ref_Search(parent_pmid:str, question:str, top_k:int=5) -> JSON with selected_pmid and ranked references
+8) Coc_Search(query:str, max_results:int=100) -> path to a ranked Cochrane review CSV
 
 Memory variables are available. If you need to pass a previous variable to a tool, reference memory items using a dollar-sign syntax:
 - $question_last        -> last question used in the pipeline
@@ -85,6 +89,14 @@ Memory variables are available. If you need to pass a previous variable to a too
 - $final_answer         -> result from Answer_Gen
 - $reference_pmid       -> PMID selected by Ref_Search
 - $reference_results    -> CSV file containing ranked references
+- $cochrane_results     -> CSV file produced by Coc_Search
+
+Use Coc_Search only when the user explicitly requests Cochrane or Cochrane
+Library evidence. Pass the user's clinical question or a general Boolean PICO
+query; do not pass PubMed-only field tags. Coc_Search is an optional database
+search and does not replace PM_Search in the normal five-step pipeline. Use
+Result_Show with file_type=$cochrane_results when the user asks to display a
+specific evidence class from the Cochrane results.
 
 Use Ref_Search only when the user explicitly asks to search or answer from the
 references/bibliography of a previously selected paper. Pass $selected_pmid as
@@ -120,7 +132,8 @@ def render_memory_for_prompt(mem: Dict[str, Any]) -> str:
     for k in [
         "question_last", "initial_query", "optimized_query", "searched_result",
         "pmid", "selected_pmid", "reference_pmid", "reference_results",
-        "reference_question", "final_answer", "shown_results",
+        "reference_question", "cochrane_results", "final_answer",
+        "shown_results",
     ]:
         if k in mem:
             parts.append(f"{k}: {short(mem[k], 800)}")
@@ -131,6 +144,16 @@ def render_memory_for_prompt(mem: Dict[str, Any]) -> str:
 
 def route_start(state: AgentState) -> str:
     if not state.get("has_pipeline_run", False):
+        messages = state.get("messages", [])
+        user_messages = [m for m in messages if isinstance(m, HumanMessage)]
+        if user_messages:
+            content = str(user_messages[-1].content)
+            if re.search(
+                r"\bcochrane\b|\bcoc[_ -]?search\b|考克兰",
+                content,
+                flags=re.IGNORECASE,
+            ):
+                return "react_llm"
         return "pipeline"
     return "react_llm"
 
@@ -214,7 +237,8 @@ def llm_node(state: AgentState) -> AgentState:
     new_messages = messages + [ai_msg]
     return {
         **state,
-        "messages": new_messages
+        "messages": new_messages,
+        "has_pipeline_run": True,
     }
 
 
