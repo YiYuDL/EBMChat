@@ -104,6 +104,4 @@ EBMChat(
 
 For this example, `Ref_Search` selects PMID `36858723`, the final 10-year
 analysis of the APT trial. Ranked references are also written to
-`table/references_<parent PMID>_<query hash>.csv`. `Answer_Gen` still requires
-an accessible `<PMID>.pdf` in `ebmchat/source/`; if no open PDF is available,
-place it there manually and repeat the request.
+`table/references_<parent PMID>_<query hash>.csv`. 
