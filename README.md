@@ -97,9 +97,7 @@ specific paper and pass the selected PMID to `Answer_Gen`:
 
 ```python
 EBMChat(
-    "Based on the references in literature PMID 38101773, what is the long "
-    "term effect of Adjuvant paclitaxel and trastuzumab for HER2-positive "
-    "early breast cancer?",
+    "Based on the references in literature PMID 38101773, what is the long term effect of Adjuvant paclitaxel and trastuzumab for HER2-positive early breast cancer?",
     "thread_003",
 )
 ```
