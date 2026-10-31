@@ -54,10 +54,11 @@ def answer_gen(pmid: str, question: str) -> str:
 
         try:
             link = get_pdf_link_by_pmid(pmid)
-            dl_result = download_by_link(link,pmid)
+            dl_result = download_by_link(link, pmid) if link else False
 
-        except Exception:
-            dl_result = None
+        except Exception as exc:
+            print(f"Unable to locate or download PMID {pmid}: {exc}")
+            dl_result = False
 
 
         success = False
@@ -93,12 +94,19 @@ def answer_gen(pmid: str, question: str) -> str:
 
                 return output
 
-            except:
-                print(f'please check whether the downloaded file is named as {pdf_name}')
-
-                return None
+            except Exception as exc:
+                message = (
+                    f"The PDF for PMID {pmid} was downloaded, but answer "
+                    f"generation failed: {exc}"
+                )
+                print(message)
+                return message
 
         else:
-            print(f'please download the literature with PMID: {pmid} manually, then use Answer_Gen tool to answer the question')
-
-            return None
+            message = (
+                f"No accessible PDF was found for PMID {pmid}. Download "
+                f"{pdf_name} manually into {source_dir}, then run Answer_Gen "
+                "again."
+            )
+            print(message)
+            return message

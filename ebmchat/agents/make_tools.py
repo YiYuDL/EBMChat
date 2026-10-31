@@ -4,6 +4,7 @@ Created on Sun Sep 28 17:26:39 2025
 @author: user
 """
 
+import json
 import os
 import re
 from typing import Dict, Any, List, Optional
@@ -29,6 +30,7 @@ from tools.query import generate_query
 from tools.search import pm_search
 from tools.answer import answer_gen
 from tools.chat import result_show
+from tools.reference import ref_search
 
 
 def _q2q_wrapper(question: str) -> str:
@@ -50,6 +52,11 @@ def _show_wrapper(keyword: str, file_type: str) -> str:
 
 
     return str(result_show(keyword, file_type))
+
+
+def _ref_wrapper(parent_pmid: str, question: str, top_k: int = 5) -> str:
+    result = ref_search(parent_pmid, question, top_k)
+    return json.dumps(result, ensure_ascii=False)
 
 Question2Query = StructuredTool.from_function(
     func=_q2q_wrapper,
@@ -80,4 +87,15 @@ Result_Show = StructuredTool.from_function(
     func=_show_wrapper,
     name="Result_Show",
     description="Show specific results. Input: keyword(str), file_type(str). Output: shown_results(str)."
+)
+Ref_Search = StructuredTool.from_function(
+    func=_ref_wrapper,
+    name="Ref_Search",
+    description=(
+        "Search only within the bibliography of a previously selected PubMed "
+        "paper. Input: parent_pmid(str), question(str), top_k(int, optional). "
+        "Output: JSON containing selected_pmid, ranked reference candidates, "
+        "and references_file. Call Answer_Gen with selected_pmid next when the "
+        "user asks for an evidence-based answer from that reference."
+    ),
 )

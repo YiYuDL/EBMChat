@@ -1,16 +1,10 @@
-import os
 from langchain_community.vectorstores import FAISS
-from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain.prompts import ChatPromptTemplate
-from langchain.schema.runnable import RunnablePassthrough
 from langchain.schema.output_parser import StrOutputParser
 from langchain_community.document_loaders import PyPDFLoader
-from langchain.chat_models import ChatOpenAI
-from langchain_openai import OpenAIEmbeddings
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from pathlib import Path
-from IPython.display import display
-
-os.environ["OPENAI_API_KEY"] = os.getenv('OPENAI_API_KEY')
+from utils.model_runtime import create_chat_model, get_embeddings
 
 
 def RAG(pmid,question):
@@ -22,11 +16,16 @@ def RAG(pmid,question):
     pdf_path = source_dir / file
 
     loader = PyPDFLoader(pdf_path)
-    pages = loader.load_and_split()
-    embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
+    pages = loader.load()
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=1200,
+        chunk_overlap=200,
+    )
+    chunks = splitter.split_documents(pages)
+    embeddings = get_embeddings()
 
-    db = FAISS.from_documents(pages, embeddings)
-    retriever=db.as_retriever()
+    db = FAISS.from_documents(chunks, embeddings)
+    retriever = db.as_retriever(search_kwargs={"k": 4})
 
     template = """
         You are a dedicated AI medical assistant specializing in oncology. Based on the provided oncology literatures, provide a detailed and truthful response that addresses the specifics of the question.
@@ -47,16 +46,20 @@ def RAG(pmid,question):
     6. The targeted treatments for different mutations should be illustrated in detail, they can be show as sub-point, like 1.1,1.2, 2.1, 2.2, etc.
     7. Add a **Summary** section at the end, condensing the overall content into **≤50 words**.
 
+    Literature context:
+    {context}
+
     Based on the uploaded literature, what do the authors say about {question}?
        Answer:
        """
 
     prompt = ChatPromptTemplate.from_template(template)
 
-    llm = ChatOpenAI(model="gpt-4.1", temperature = 0.2)
+    llm = create_chat_model()
 
 
-    context = retriever.invoke(question)
+    documents = retriever.invoke(question)
+    context = "\n\n".join(document.page_content for document in documents)
 
     prompt_input = {"context": context, "question": question}
     prompt_result = prompt.invoke(prompt_input)
@@ -66,4 +69,7 @@ def RAG(pmid,question):
     output = StrOutputParser().invoke(llm_result)
 
 
-    return output
+    answer = output.strip()
+    if not answer:
+        raise RuntimeError("The model returned an empty answer.")
+    return answer

@@ -4,18 +4,27 @@ Created on Sun Aug 28 22:48:57 2025
 @author: user
 """
 
+import json
 import os
 import re
 from typing import Dict, Any, List, Optional
 from typing_extensions import TypedDict
 
 
-from langchain_openai import ChatOpenAI
 from langchain.tools import StructuredTool
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage, ToolMessage, AnyMessage
 from langgraph.graph import StateGraph, START, END
 from langgraph.checkpoint.memory import MemorySaver
-from agents.make_tools import Question2Query, Query_Opt, PM_Search, Evid_Eval, Answer_Gen, Result_Show
+from agents.make_tools import (
+    Answer_Gen,
+    Evid_Eval,
+    PM_Search,
+    Query_Opt,
+    Question2Query,
+    Ref_Search,
+    Result_Show,
+)
+from utils.model_runtime import create_chat_model
 
 
 TOOLS = {
@@ -25,6 +34,7 @@ TOOLS = {
     "Evid_Eval": Evid_Eval,
     "Answer_Gen": Answer_Gen,
     "Result_Show": Result_Show,
+    "Ref_Search": Ref_Search,
 }
 
 
@@ -34,7 +44,8 @@ TOOL_OUTPUT_TO_MEMORY_KEY = {
     "PM_Search": "searched_result",
     "Evid_Eval": "pmid",
     "Answer_Gen": "final_answer",
-    "Result_Show": "shown_results"
+    "Result_Show": "shown_results",
+    "Ref_Search": "reference_search",
 }
 
 
@@ -50,7 +61,7 @@ class AgentState(TypedDict, total=False):
     last_tool_outputs: Dict[str, Any]
 
 
-llm = ChatOpenAI(model="gpt-4.1", temperature=0.2)
+llm = create_chat_model()
 
 
 REACT_SYSTEM_PROMPT = """You are an assistant with tools. For a new thread, the system will already run the 5-step pipeline automatically. For subsequent turns in the same thread, decide which tool(s) to call based on the user's request and the conversation memory.
@@ -62,6 +73,7 @@ Available tools:
 4) Evid_Eval(search_results:str, question:str) -> pmid:str
 5) Answer_Gen(pmid:str, question:str) -> final_answer:str
 6) Result_Show(keyword:str, file_type:str) -> shown_results:str
+7) Ref_Search(parent_pmid:str, question:str, top_k:int=5) -> JSON with selected_pmid and ranked references
 
 Memory variables are available. If you need to pass a previous variable to a tool, reference memory items using a dollar-sign syntax:
 - $question_last        -> last question used in the pipeline
@@ -69,7 +81,21 @@ Memory variables are available. If you need to pass a previous variable to a too
 - $optimized_query      -> result from Query_Opt
 - $searched_result      -> result from PM_Search
 - $pmid                 -> result from Evid_Eval
+- $selected_pmid        -> PMID most recently used by Answer_Gen
 - $final_answer         -> result from Answer_Gen
+- $reference_pmid       -> PMID selected by Ref_Search
+- $reference_results    -> CSV file containing ranked references
+
+Use Ref_Search only when the user explicitly asks to search or answer from the
+references/bibliography of a previously selected paper. Pass $selected_pmid as
+parent_pmid unless the user provides another PMID. After Ref_Search, call
+Answer_Gen with pmid=$reference_pmid and the user's substantive question. Do
+not substitute PM_Search for this bibliography-scoped task.
+
+Example: for "Based on the references in PMID 38101773, what is the long-term
+effect of adjuvant paclitaxel and trastuzumab for HER2-positive early breast
+cancer?", first call Ref_Search with parent_pmid="38101773", then call
+Answer_Gen with pmid=$reference_pmid.
 
 For example, if the user asks: "please show me the searched result for Guidelines in the csv file from last step",
 call:
@@ -91,7 +117,11 @@ def render_memory_for_prompt(mem: Dict[str, Any]) -> str:
         return text
 
     parts = []
-    for k in ["question_last","initial_query","optimized_query","searched_result","pmid","final_answer","shown_results"]:
+    for k in [
+        "question_last", "initial_query", "optimized_query", "searched_result",
+        "pmid", "selected_pmid", "reference_pmid", "reference_results",
+        "reference_question", "final_answer", "shown_results",
+    ]:
         if k in mem:
             parts.append(f"{k}: {short(mem[k], 800)}")
     if not parts:
@@ -149,6 +179,7 @@ def pipeline_node(state: AgentState) -> AgentState:
         "optimized_query": qopt_out,
         "searched_result": pm_out,
         "pmid": evid_out,
+        "selected_pmid": evid_out,
         "final_answer": ans_out,
         "pipeline_trace": trace,
     })
@@ -242,6 +273,27 @@ def tool_exec_node(state: AgentState) -> AgentState:
         mem_key = TOOL_OUTPUT_TO_MEMORY_KEY.get(name)
         if mem_key:
             memory[mem_key] = result
+
+        if name == "Answer_Gen" and args.get("pmid"):
+            memory["selected_pmid"] = str(args["pmid"])
+            if args.get("question"):
+                memory["question_last"] = str(args["question"])
+
+        if name == "Ref_Search" and not str(result).startswith("[ToolError]"):
+            try:
+                reference_result = json.loads(str(result))
+            except (TypeError, json.JSONDecodeError):
+                reference_result = {}
+            if reference_result.get("selected_pmid"):
+                memory["reference_pmid"] = str(
+                    reference_result["selected_pmid"]
+                )
+            if reference_result.get("references_file"):
+                memory["reference_results"] = reference_result[
+                    "references_file"
+                ]
+            if reference_result.get("question"):
+                memory["reference_question"] = reference_result["question"]
 
 
     new_messages = messages + tool_result_messages

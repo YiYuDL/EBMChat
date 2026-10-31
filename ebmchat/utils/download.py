@@ -142,25 +142,64 @@ def get_pdf_link_by_pmid(pmid) -> Dict[str, Optional[str]]:
     return None
 
 def download_by_link(link, pmid):
+    if not link:
+        return False
 
-    parent_dir = Path.cwd().parent
-    source_dir = parent_dir / "source"
+    source_dir = Path(__file__).resolve().parent.parent / "source"
 
     if not source_dir.exists():
-        source_dir.mkdir()
+        source_dir.mkdir(parents=True)
         print(f"source folder: {source_dir} is created")
     else:
         print(f"source folder: {source_dir} is existed")
 
-    download_dir = source_dir
+    # Selenium serializes Firefox preferences as JSON, so filesystem paths
+    # passed to it must be strings rather than pathlib.Path objects.
+    download_dir = str(source_dir.resolve())
     pmid = str(pmid)
-    Path(download_dir).mkdir(parents=True, exist_ok=True)
+    source_dir.mkdir(parents=True, exist_ok=True)
 
     target_filename = f"{pmid}.pdf"
     target_path = os.path.join(download_dir, target_filename)
+    partial_path = target_path + ".part"
     total_timeout = 90
     poll_interval = 0.3
     stable_seconds = 1.5
+
+    # Most open-access PDF URLs can be downloaded directly. This works in
+    # headless server and container environments where Firefox is unavailable.
+    try:
+        with requests.get(
+            link,
+            headers=HEADERS,
+            timeout=(15, total_timeout),
+            allow_redirects=True,
+            stream=True,
+        ) as response:
+            response.raise_for_status()
+            chunks = response.iter_content(chunk_size=1024 * 64)
+            first_chunk = next(chunks, b"")
+            content_type = response.headers.get("Content-Type", "").lower()
+            if first_chunk.startswith(b"%PDF-") or "application/pdf" in content_type:
+                with open(partial_path, "wb") as pdf_file:
+                    pdf_file.write(first_chunk)
+                    for chunk in chunks:
+                        if chunk:
+                            pdf_file.write(chunk)
+                os.replace(partial_path, target_path)
+                print(
+                    f"下载完成：{target_filename} | "
+                    f"大小 {os.path.getsize(target_path)} bytes"
+                )
+                return True
+    except (requests.RequestException, OSError) as exc:
+        print(f"直接下载失败，尝试浏览器下载: {exc}")
+    finally:
+        if os.path.exists(partial_path):
+            try:
+                os.unlink(partial_path)
+            except OSError:
+                pass
 
 
     options = Options()

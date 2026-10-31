@@ -7,23 +7,7 @@ Created on Tue Aug 12 08:56:24 2025
 import pandas as pd
 from scipy import spatial
 from typing import List
-from openai import OpenAI
-import os
-import re
-from pathlib import Path
-
-openai_api_key = os.environ.get('OPENAI_API_KEY')
-
-client = OpenAI(api_key = openai_api_key)
-
-def get_embedding(text):
-    embeddings = []
-    response = client.embeddings.create(
-        model="text-embedding-3-large",
-        input=text
-    )
-    embeddings.extend([item.embedding for item in response.data])
-    return embeddings
+from utils.model_runtime import get_embeddings
 
 def distances_from_embeddings(
         query_embedding: List[float],
@@ -45,21 +29,15 @@ def distances_from_embeddings(
 
     return sims
 
-def get_rows_sorted_by_relevance(question, df):
+def get_rows_sorted_by_relevance(question_embedding, df):
     """
-    Function that takes in a question string and a dataframe containing
-    rows of text and associated embeddings, and returns that dataframe
-    sorted from least to most relevant for that question
+    Sort a dataframe containing document embeddings by query relevance.
     """
-
-
-    question_embeddings = get_embedding(question)
-    list1 = question_embeddings[0]
 
 
     df_copy = df.copy()
     df_copy["Relevance"] = distances_from_embeddings(
-        list1,
+        question_embedding,
         df_copy["embedding"].values,
         distance_metric="cosine"
     )
@@ -70,6 +48,7 @@ def get_rows_sorted_by_relevance(question, df):
 
 def evid_eval(file, question):
     df1 = pd.read_csv(file)
+    embedding_model = get_embeddings()
 
     try:
 
@@ -82,10 +61,11 @@ def evid_eval(file, question):
 
     text1 = df1['em'].tolist()
 
-    embeddings = get_embedding(text1)
+    embeddings = embedding_model.embed_documents(text1)
     df1['embedding'] = embeddings
 
-    df_copy0 = get_rows_sorted_by_relevance(question, df1)
+    question_embedding = embedding_model.embed_query(question)
+    df_copy0 = get_rows_sorted_by_relevance(question_embedding, df1)
 
     df_copy0 = df_copy0.drop(columns=['em', 'embedding'], errors='ignore')
 
@@ -94,7 +74,7 @@ def evid_eval(file, question):
     df_copy0.to_csv(file, index=False)
 
     df_copy1 = df_copy0[df_copy0['Evidence_Hierarchy'] == 'Guideline'].copy()
-    df_copy2 = df_copy0[df_copy0['Evidence_Hierarchy'] == 'SRMA'].copy()
+    df_copy2 = df_copy0[df_copy0['Evidence_Hierarchy'] == 'SR&MA'].copy()
     df_copy3 = df_copy0[df_copy0['Evidence_Hierarchy'] == 'RCT'].copy()
 
     non_empty_dfs = []
@@ -106,13 +86,13 @@ def evid_eval(file, question):
         Evidence_Hierarchys.append('Guideline')
     if not df_copy2.empty:
         non_empty_dfs.append(df_copy2)
-        Evidence_Hierarchys.append('SRMA')
+        Evidence_Hierarchys.append('SR&MA')
     if not df_copy3.empty:
         non_empty_dfs.append(df_copy3)
         Evidence_Hierarchys.append('RCT')
 
 
-    Evidence_Hierarchys = ['Guideline', 'SRMA', 'RCT']
+    Evidence_Hierarchys = ['Guideline', 'SR&MA', 'RCT']
     selected_rows = []
 
 
@@ -164,7 +144,7 @@ def evid_eval(file, question):
         g_pmid = g_df['PMID'].values[0] if not g_df.empty else None
 
 
-        srma_df = result_df[result_df['Evidence_Hierarchy'] == 'SRMA']
+        srma_df = result_df[result_df['Evidence_Hierarchy'] == 'SR&MA']
         s_distance = srma_df['Relevance'].values[0] if not srma_df.empty else None
         s_pmid = srma_df['PMID'].values[0] if not srma_df.empty else None
 

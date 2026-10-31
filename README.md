@@ -9,7 +9,7 @@ Create a new environment:
 ```bash
 cd ebmchat
 conda env create -f environment.yml
-conda activate ebmchat
+conda activate ebmchat_env
 ```
 Install the ebmchat package
 ```bash
@@ -17,10 +17,25 @@ python setup.py install
 ```
 
 ## Getting start
-First set up your API keys in your environment.
+Set your OpenAI API key before starting EBMChat:
 ```
 export OPENAI_API_KEY=your-openai-api-key
 ```
+
+The default chat model is `gpt-4.1`, and the default embedding model is
+`text-embedding-3-large`. They can be overridden with `EBMCHAT_LLM_MODEL` and
+`EBMCHAT_EMBEDDING_MODEL` when needed.
+
+`Ref_Search` searches only within the bibliography of a selected PubMed
+article. It resolves the parent PMID through OpenAlex, retrieves the cited
+works, ranks them with embeddings plus BM25, and uses `gpt-4.1` to rerank the
+strongest candidates. OpenAlex does not require a key for normal use;
+`EBMCHAT_CONTACT_EMAIL` and
+`EBMCHAT_OPENALEX_API_KEY` are optional.
+
+EBMChat downloads only openly accessible papers. If the selected PMID does not
+have an accessible PDF, download `<PMID>.pdf` manually into `ebmchat/source/`
+and run the question again.
 
 In a Python:
 ```python
@@ -62,3 +77,23 @@ EBMChat("please show me the Guideline information from the generated table file"
 
 
 <img src="example/table.png" width="80%" height="80%">
+
+### Reference search (Figure 5d)
+
+On a later turn in the same thread, the agent can search the references of a
+specific paper and pass the selected PMID to `Answer_Gen`:
+
+```python
+EBMChat(
+    "Based on the references in literature PMID 38101773, what is the long "
+    "term effect of Adjuvant paclitaxel and trastuzumab for HER2-positive "
+    "early breast cancer?",
+    "thread_003",
+)
+```
+
+For this example, `Ref_Search` selects PMID `36858723`, the final 10-year
+analysis of the APT trial. Ranked references are also written to
+`table/references_<parent PMID>_<query hash>.csv`. `Answer_Gen` still requires
+an accessible `<PMID>.pdf` in `ebmchat/source/`; if no open PDF is available,
+place it there manually and repeat the request.

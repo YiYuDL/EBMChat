@@ -4,9 +4,13 @@ Created on Fri Aug  8 15:03:29 2025
 @author: user
 """
 
-import openai
+from utils.model_runtime import (
+    LLM_MAX_TOKENS,
+    LLM_MODEL,
+    create_openai_client,
+)
 
-client = openai.OpenAI()
+client = create_openai_client()
 
 def generate_query(question: str) -> str:
     prompt = f"""You are an expert in evidence-based medicine, skilled at using evidence-based medicine thinking to convert clinical questions described in natural language into search queries based on the PICO principle (patient, intervention, condition, and outcome). After conversion, please place patient- or disease-related keywords first, each keyword needs to be enclosed in quotation marks.. Below are a few representative examples; please follow these examples for conversion：
@@ -21,11 +25,17 @@ def generate_query(question: str) -> str:
 Please follow the instructions and examples above and only output the final converted search query, without any additional explanations or additional content. Here the question is {question}
 """
     response = client.chat.completions.create(
-        model="gpt-4.1",
+        model=LLM_MODEL,
         messages=[{"role": "user", "content": prompt}],
-        temperature=0
+        temperature=0,
+        max_tokens=min(LLM_MAX_TOKENS, 512),
     )
-    return response.choices[0].message.content.strip()
+    query = (response.choices[0].message.content or "").strip()
+    if not query:
+        raise RuntimeError(
+            "The model returned an empty search query."
+        )
+    return query
 
 import re
 from Bio import Entrez

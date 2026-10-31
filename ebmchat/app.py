@@ -36,16 +36,21 @@ def EBMChat(question: str, thread_id: str) -> str:
 
     result_state: AgentState = apps.invoke(
         input_state,
-        config={"configurable": {"thread_id": thread_id}}
+        config={
+            "configurable": {"thread_id": thread_id},
+            "recursion_limit": 10,
+        }
     )
 
 
     msgs = result_state.get("messages", [])
     ai_msgs = [m for m in msgs if isinstance(m, AIMessage)]
     if ai_msgs:
-        return ai_msgs[-1].content if isinstance(ai_msgs[-1].content, str) else str(ai_msgs[-1].content)
+        content = ai_msgs[-1].content if isinstance(ai_msgs[-1].content, str) else str(ai_msgs[-1].content)
+        return content.strip()
 
     if msgs:
         last = msgs[-1]
-        return last.content if isinstance(last.content, str) else str(last.content)
+        content = last.content if isinstance(last.content, str) else str(last.content)
+        return content.strip()
     return ""
